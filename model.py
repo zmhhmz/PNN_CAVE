@@ -94,7 +94,7 @@ class Network(object):
         mod=model
         
         #text file to save notes
-        info=open(folder+'/PNN_model.txt','a')
+        info=open(folder+save_model_name.split('.')[0]+'.txt','a')
         info.write('\n')
         for epoch in range(epochs):
             
