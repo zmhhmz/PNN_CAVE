@@ -107,3 +107,12 @@ def read_data(file):
         Y = hf.get('Y')
         Z = hf.get('Z')
         return np.array(X), np.array(Y), np.array(Z)
+
+def init_layers(layers_dir = datapath+'layers_init.mat'):
+    mat = sio.loadmat(layers_dir)
+    layers = mat['layers'][0]
+    out=[]
+    for i in range(len(layers)):
+        out.append(np.squeeze(layers[i]))
+    return out
+    
