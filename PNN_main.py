@@ -124,7 +124,7 @@ if __name__ == '__main__':
     if param['gpu']:
         os.environ["THEANO_FLAGS"]='init_gpu_device=cuda0'
 
-    if param['mode']=='train'
+    if param['mode']=='train':
         train()
     else:
         test(param)
