@@ -28,18 +28,11 @@ param={
     'residual':True,
     'regol':True,
     'ratio':32,
-    'gpu':False,
+    'gpu':True,
     'channel1':34, 
     'channel2':31,
     'padSize':16
 }
-
-# if param['gpu']:
-#     os.environ["THEANO_FLAGS"]='floatX=float32,init_gpu_device=cuda0'
-# else:
-#     os.environ["THEANO_FLAGS"] = "floatX=float32"
-
-
 
 def train():
     if not os.path.exists(param['train_dir']):
@@ -122,7 +115,8 @@ def test(model): #test all data
             
 if __name__ == '__main__':
     if param['gpu']:
-        os.environ["THEANO_FLAGS"]='init_gpu_device=cuda0'
+        theano.config.device = 'cuda0'
+        theano.config.init_gpu_device = 'cuda0'
 
     if param['mode']=='train':
         train()
