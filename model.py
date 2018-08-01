@@ -20,6 +20,11 @@ class Network(object):
             lay = self.layers[i]
             lay1 = lay.set_inpt(lay1,last)
         self.output = lay1
+
+     def build(self,img):
+        I_in=T.ftensor4('I_in')
+        setnet= theano.function([I_in],self.output,givens={self.x :I_in},allow_input_downcast=True)
+        return setnet(img)
         
      # gradient descent function   
      def SGD(self, data, ref, model):

@@ -8,7 +8,7 @@ import h5py
 import os
 import numpy as np
 import scipy.io as sio  
-#import MyLib as ML
+from utils import down_img
 import random 
 #import cv2
 
@@ -108,7 +108,7 @@ def read_data(file):
         Z = hf.get('Z')
         return np.array(X), np.array(Y), np.array(Z)
 
-def init_layers(layers_dir = datapath+'layers_init.mat'):
+def get_layers(layers_dir = datapath+'layers_init.mat'):
     mat = sio.loadmat(layers_dir)
     layers = mat['layers'][0]
     out=[]
@@ -116,3 +116,17 @@ def init_layers(layers_dir = datapath+'layers_init.mat'):
         out.append(np.squeeze(layers[i]))
     return out
     
+def generate_test_data(ratio,test_data_name):
+    #test_data_name = 'chart_and_stuffed_toy_ms'
+    data = sio.loadmat(datapath+'Y/'+test_data_name)
+    I_MS = data['RGB']
+    data = sio.loadmat(datapath+'X/'+test_data_name)
+    I_HS_HR = data['msi']
+
+    I_MS = np.expand_dims(I_MS, axis = 0)
+    I_MS = np.transpose(I_MS,(0,3,1,2))
+    I_HS_HR = np.expand_dims(I_HS_HR, axis = 0)
+    I_HS_HR = np.transpose(I_HS_HR,(0,3,1,2))
+    I_HS = down_img(I_HS_HR, ratio)
+
+    return I_HS,I_MS
