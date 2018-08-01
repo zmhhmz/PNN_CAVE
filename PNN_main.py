@@ -8,15 +8,13 @@ import scipy.misc as misc
 from utils import interp23, down_img, input_prep
 from model import Network, ConvLayer
 
-theano.config.floatX= 'float32'
-
 param={
     'mode':'train', # train or test
     'rand':False, # True for using randomly initialized parameters (likely to explode);
                   # False for using pretrained parameters 
-    'total_epoch':2,
-    'in_epoch':6,
-    'batch_iter':2,
+    'total_epoch':20,
+    'in_epoch':10,
+    'batch_iter':1000,
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
@@ -33,6 +31,32 @@ param={
     'channel2':31,
     'padSize':16
 }
+
+theano.config.floatX= 'float32'
+if param['gpu']:
+    THEANO_FLAGS='device=cuda0,init_gpu_device=cuda0'
+
+    #test gpu
+    import time
+    vlen = 10 * 30 * 768  
+    iters = 1000
+    rng = np.random.RandomState(22)
+    x = theano.shared(np.asarray(rng.rand(vlen), theano.config.floatX))
+    f = theano.function([], T.exp(x))
+    print(f.maker.fgraph.toposort())
+    t0 = time.time()
+    for i in range(iters):
+        r = f()
+    t1 = time.time()
+    #print("Looping %d times took %f seconds" % (iters, t1 - t0))
+    #print("Result is %s" % (r,))
+    if np.any([isinstance(x.op, T.Elemwise) and
+                ('Gpu' not in type(x.op).__name__)
+                for x in f.maker.fgraph.toposort()]):
+        print('Using the cpu')
+    else:
+        print('Using the gpu')
+
 
 def train():
     if not os.path.exists(param['train_dir']):
@@ -114,9 +138,6 @@ def test(model): #test all data
 
             
 if __name__ == '__main__':
-    if param['gpu']:
-        theano.config.device = 'cuda0'
-        theano.config.init_gpu_device = 'cuda0'
 
     if param['mode']=='train':
         train()
