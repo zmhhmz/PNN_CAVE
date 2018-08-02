@@ -9,7 +9,7 @@ from utils import interp23, down_img, input_prep
 from model import Network, ConvLayer
 
 param={
-    'mode':'train', # train or test
+    'mode':'test', # train or test
     'rand':False, # True for using randomly initialized parameters (likely to explode);
                   # False for using pretrained parameters 
     'total_epoch':20,
@@ -20,7 +20,7 @@ param={
     'batch_size':10,
     'train_dir':'train_dir/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/',
+    'test_dir':'test_results/20_10_1000/',
     'save_model_name':'PNN_model2.mat',
     'cost':'L1',
     'residual':True,
@@ -134,6 +134,7 @@ def test(model): #test all data
         for i in range(len(files)):
             I_HS,I_MS = Crd.generate_test_data(model['ratio'],files[i])
             I_out = pnn_test(I_HS,I_MS,model)
+            I_out = np.transpose(I_out,(0,2,3,1))
             sio.savemat(model['test_dir']+files[i],{'outX':I_out})
 
             
