@@ -4,39 +4,39 @@ import tensorflow as tf
 
 
 #original version with batchnorm
-# def PNN(I_in,filters=[96,64,31]):
-#     w1 = create_kernel('w1', [9, 9, param['channel1']+param['channel2'], filters[0]])
-#     b1 = tf.Variable(tf.constant(0.0, shape=[filters[0]], dtype=tf.float32), trainable=True, name='b1')
-#     scale = tf.Variable(tf.ones(filters[0])/20, trainable=True, name=('scale1'))
-#     beta = tf.Variable(tf.zeros(filters[0]), trainable=True, name=('beta1'))
-#     conv = tf.nn.conv2d(I_in, w1, [1, 1, 1, 1], padding='SAME')
-#     feature = tf.nn.bias_add(conv, b1)
-#     mean, var  = tf.nn.moments(feature,[0, 1, 2])
-#     feature_normal = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
-#     feature_relu = tf.nn.relu(feature_normal)
+def PNN(I_in,filters=[96,64,31]):
+    w1 = create_kernel('w1', [9, 9, 34, filters[0]])
+    b1 = tf.Variable(tf.constant(0.0, shape=[filters[0]], dtype=tf.float32), trainable=True, name='b1')
+    scale = tf.Variable(tf.ones(filters[0])/20, trainable=True, name=('scale1'))
+    beta = tf.Variable(tf.zeros(filters[0]), trainable=True, name=('beta1'))
+    conv = tf.nn.conv2d(I_in, w1, [1, 1, 1, 1], padding='SAME')
+    feature = tf.nn.bias_add(conv, b1)
+    mean, var  = tf.nn.moments(feature,[0, 1, 2])
+    feature_normal = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
+    feature_relu = tf.nn.relu(feature_normal)
 
-#     w2 = create_kernel('w2', [5, 5, filters[0], filters[1]])
-#     b2 = tf.Variable(tf.constant(0.0, shape=[filters[1]], dtype=tf.float32), trainable=True, name='b2')
-#     scale = tf.Variable(tf.ones(filters[1])/20, trainable=True, name=('scale2'))
-#     beta = tf.Variable(tf.zeros(filters[1]), trainable=True, name=('beta2'))
-#     conv = tf.nn.conv2d(feature_relu, w2, [1, 1, 1, 1], padding='SAME')
-#     feature = tf.nn.bias_add(conv, b2)
-#     mean, var  = tf.nn.moments(feature,[0, 1, 2])
-#     feature_normal = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
-#     feature_relu = tf.nn.relu(feature_normal)
+    w2 = create_kernel('w2', [5, 5, filters[0], filters[1]])
+    b2 = tf.Variable(tf.constant(0.0, shape=[filters[1]], dtype=tf.float32), trainable=True, name='b2')
+    scale = tf.Variable(tf.ones(filters[1])/20, trainable=True, name=('scale2'))
+    beta = tf.Variable(tf.zeros(filters[1]), trainable=True, name=('beta2'))
+    conv = tf.nn.conv2d(feature_relu, w2, [1, 1, 1, 1], padding='SAME')
+    feature = tf.nn.bias_add(conv, b2)
+    mean, var  = tf.nn.moments(feature,[0, 1, 2])
+    feature_normal = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
+    feature_relu = tf.nn.relu(feature_normal)
     
-#     w3 = create_kernel('w3', [5, 5, filters[1], filters[2]])
-#     b3 = tf.Variable(tf.constant(0.0, shape=[filters[2]], dtype=tf.float32), trainable=True, name='b3')
-#     scale = tf.Variable(tf.ones(filters[2])/20, trainable=True, name=('scale3'))
-#     beta = tf.Variable(tf.zeros(filters[2]), trainable=True, name=('beta3'))
-#     conv = tf.nn.conv2d(feature_relu, w3, [1, 1, 1, 1], padding='SAME')
-#     feature = tf.nn.bias_add(conv, b3)
-#     mean, var  = tf.nn.moments(feature,[0, 1, 2])
-#     x = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
-#     return x
+    w3 = create_kernel('w3', [5, 5, filters[1], filters[2]])
+    b3 = tf.Variable(tf.constant(0.0, shape=[filters[2]], dtype=tf.float32), trainable=True, name='b3')
+    scale = tf.Variable(tf.ones(filters[2])/20, trainable=True, name=('scale3'))
+    beta = tf.Variable(tf.zeros(filters[2]), trainable=True, name=('beta3'))
+    conv = tf.nn.conv2d(feature_relu, w3, [1, 1, 1, 1], padding='SAME')
+    feature = tf.nn.bias_add(conv, b3)
+    mean, var  = tf.nn.moments(feature,[0, 1, 2])
+    x = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
+    return x
 
 #deeper version
-def PNN(I_in):
+def PNN2(I_in):
     I_in = resCNNnet('ResBlock',I_in,1,34,8)
     filters=[34,48,64,31]
     last =False

@@ -5,18 +5,18 @@ import random
 from utils import interp23, down_img, input_prep
 import CAVE_dataReader as Crd
 import scipy.io as sio
-from model_new import PNN
+
 
 param={
-    'mode':'train', # train or test
+    'mode':'test', # train or test
     'epoch':20,
     'batch_iter':2000,
-    'lr':0.0001,
+    'lr':0.00001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/newpnn/',
+    'train_dir':'train_dir/old_20/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/new2/',
+    'test_dir':'test_results/old_20/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':False,
@@ -25,8 +25,13 @@ param={
     'gpu':True,
     'channel1':3, 
     'channel2':31,
-    'padSize':16
+    'padSize':16,
+    'PNN':'new'  #old or new
 }
+if param['PNN']=='old':
+    from model_new import PNN
+else:
+    from model_new import PNN2 as PNN
 
 def train():
     if not os.path.exists(param['train_dir']):
@@ -114,7 +119,7 @@ def testAll():
         
         files =os.listdir('CAVEdata/X/')
         files.sort()
-        for i in range(3):
+        for i in range(32):
             I_HS,I_MS = Crd.generate_test_data(param['ratio'],files[i])
             I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
             I_in = np.transpose(I_in,[0,2,3,1])
