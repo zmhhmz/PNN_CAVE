@@ -9,24 +9,24 @@ import scipy.io as sio
 
 param={
     'mode':'test', # train or test
-    'epoch':20,
-    'batch_iter':2000,
+    'epoch':2,
+    'batch_iter':4,
     'lr':0.00001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/old_20/',
+    'train_dir':'train_dir/eval4/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/old_20/',
+    'test_dir':'test_results/eval4/',
     'save_model_name':'PNN_model',
     'cost':'L1',
-    'residual':False,
-    'regol':False,
+    'residual':True,
     'ratio':32,
     'gpu':True,
     'channel1':3, 
     'channel2':31,
     'padSize':16,
-    'PNN':'new'  #old or new
+    'PNN':'new',  #old or new
+    'Target_adaptive':False
 }
 if param['PNN']=='old':
     from model_new import PNN
@@ -76,7 +76,7 @@ def train():
             if j+1 >(param['epoch']/3):
                 lr_ = param['lr']*0.1
             if j+1 >(2*param['epoch']/3):
-                lr_ = param['lr']*0.1
+                lr_ = param['lr']*0.01
 
             for num in range(param['batch_iter']):
                 print("...Training with the %d-th batch of the %d-th epoch... "%(num+1,j+1))
@@ -88,7 +88,7 @@ def train():
                 I_in = np.transpose(I_input,[0,2,3,1])
                 I_ref = np.transpose(I_HS_HR,[0,2,3,1])
                 if param['residual']:
-                    I_ref=I_ref-I_in[:,:param['channel2'],:,:]
+                    I_ref=I_ref-I_in[:,:,:,:param['channel2']]
                 _, lossvalue = sess.run([g_optim,loss],{I:I_in,I_g:I_ref,lr:lr_})
                 print("loss: {0}".format(lossvalue))
             saver.save(sess, save_path, global_step = j+1)
@@ -100,20 +100,15 @@ def testAll():
     if not os.path.exists(param['test_dir']):
         os.makedirs(param['test_dir'])    
 
-    # img_size = param['img_size']
-    # ch1 = param['channel1']
-    # ch2 = param['channel2']
-
     I = tf.placeholder(tf.float32, shape=(None, 512,512, 34)) 
-    #I_g = tf.placeholder(tf.float32,shape=(None,img_size,img_size,ch2)) 
     I_out = PNN(I)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
     saver = tf.train.Saver(max_to_keep = 5)
 
-    
-    with tf.Session(config=config) as sess:        
+
+    with tf.Session(config=config) as sess:
         ckpt = tf.train.latest_checkpoint(param['train_dir'])
         saver.restore(sess, ckpt) 
         
@@ -123,8 +118,13 @@ def testAll():
             I_HS,I_MS = Crd.generate_test_data(param['ratio'],files[i])
             I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
             I_in = np.transpose(I_in,[0,2,3,1])
+            if param['residual']:
+                I_res = I_in[:,:,:,:param['channel2']]
             I_pred = sess.run([I_out],{I:I_in})
-            I_pred = np.squeeze(I_pred)
+            if param['residual']:
+                I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
+            else:
+                I_pred = np.squeeze(I_pred)
             sio.savemat(param['test_dir']+files[i], {'outX': I_pred})     
             print(files[i] + ' done!')
 

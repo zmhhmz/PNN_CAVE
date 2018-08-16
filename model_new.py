@@ -1,10 +1,8 @@
 
 import tensorflow as tf
 
-
-
 #original version with batchnorm
-def PNN(I_in,filters=[96,64,31]):
+def PNN(I_in,param,filters=[96,64,31]):
     w1 = create_kernel('w1', [9, 9, 34, filters[0]])
     b1 = tf.Variable(tf.constant(0.0, shape=[filters[0]], dtype=tf.float32), trainable=True, name='b1')
     scale = tf.Variable(tf.ones(filters[0])/20, trainable=True, name=('scale1'))
@@ -37,8 +35,8 @@ def PNN(I_in,filters=[96,64,31]):
 
 #deeper version
 def PNN2(I_in):
-    I_in = resCNNnet('ResBlock',I_in,1,34,8)
-    filters=[34,48,64,31]
+    I_in = resCNNnet('ResBlock',I_in,1,34,30)
+    filters=[34,64,64,31]
     last =False
     for i in range(len(filters)-1):
         if i==len(filters)-2:
@@ -53,6 +51,7 @@ def PNN2(I_in):
         I_in = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
         if not last:
             I_in = tf.nn.relu(I_in)
+    
     return I_in
 
 def create_kernel(name, shape, initializer=tf.truncated_normal_initializer(mean = 0, stddev = 0.1)):
@@ -66,37 +65,6 @@ def resCNNnet(name,X,j,channel,levelN):
             X = resLevel(('resCNN_%s_%s'%(j,i+1)), 3, X, channel)                                
         return X
 
-# def resLevel(name, Fsize,X, Channel):
-#     with tf.variable_scope(name):
-#         # 两层调整
-#         kernel = create_kernel(name='weights1', shape=[Fsize, Fsize, Channel, Channel+3])
-#         biases = tf.Variable(tf.constant(0.0, shape=[Channel+3], dtype=tf.float32), trainable=True, name='biases1')
-#         scale = tf.Variable(tf.ones([Channel+3])/20, trainable=True, name=('scale1'))
-#         beta = tf.Variable(tf.zeros([Channel+3]), trainable=True, name=('beta1'))
-
-#         conv = tf.nn.conv2d(X, kernel, [1, 1, 1, 1], padding='SAME')
-#         feature = tf.nn.bias_add(conv, biases)
-
-#         mean, var  = tf.nn.moments(feature,[0, 1, 2])
-#         feature_normal = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
-
-#         feature_relu = tf.nn.relu(feature_normal)
-        
-#         kernel = create_kernel(name='weights2', shape=[Fsize, Fsize, Channel+3, Channel])
-#         biases = tf.Variable(tf.constant(0.0, shape=[Channel], dtype=tf.float32), trainable=True, name='biases2')
-#         scale = tf.Variable(tf.ones([Channel])/20, trainable=True, name=('scale2'))
-#         beta = tf.Variable(tf.zeros([Channel]), trainable=True, name=('beta2'))
-
-#         conv = tf.nn.conv2d(feature_relu, kernel, [1, 1, 1, 1], padding='SAME')
-#         feature = tf.nn.bias_add(conv, biases)
-
-#         mean, var  = tf.nn.moments(feature,[0, 1, 2])
-#         feature_normal = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
-
-#         feature_relu = tf.nn.relu(feature_normal)
-
-#         X = tf.add(X, feature_relu)  #  shortcut  
-#         return X
     
 def resLevel(name, Fsize,X,Channel):
     with tf.variable_scope(name):
