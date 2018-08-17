@@ -12,18 +12,18 @@ import scipy.io as sio
 
 param={
     'mode':'train', # train or test
-    'epoch':2,
-    'batch_iter':3,
+    'epoch':15,
+    'batch_iter':2000,
     'lr':0.0001,
     'img_size':96,
-    'batch_size':1,
-    'train_dir':'train_dir/train_pnn_new_30_30epo/',
+    'batch_size':10,
+    'train_dir':'train_dir/train_pnn_new_30_15epo_nores/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_pnn_new_30_30epo/',
+    'test_dir':'test_results/test_pnn_new_30_15epo_nores/',
     'save_model_name':'PNN_model',
     'cost':'L1',
-    'residual':True,
-    'regol':True,
+    'residual':False,
+    'regol':False,
     'reg_weight':0.000001,
     'ratio':32,
     'gpu':True,
@@ -127,7 +127,7 @@ def testAll():
         os.makedirs(param['test_dir'])    
 
     I = tf.placeholder(tf.float32, shape=(None, 512,512, 34)) 
-    I_out = PNN(I)
+    I_out,_ = PNN(I)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
@@ -147,10 +147,12 @@ def testAll():
                 I_res = I_in[:,:,:,:param['channel2']]
             
             I_pred = sess.run([I_out],{I:I_in})
+        
             if param['residual']:
                 I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
             else:
                 I_pred = np.squeeze(I_pred)
+
             sio.savemat(param['test_dir']+files[i], {'outX': I_pred})     
             print(files[i] + ' done!')
 
