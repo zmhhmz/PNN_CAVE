@@ -6,22 +6,28 @@ from utils import interp23, down_img, input_prep
 import CAVE_dataReader as Crd
 import scipy.io as sio
 
+#to dos:
+# target adaptive
+
 
 param={
-    'mode':'test', # train or test
+    'mode':'train', # train or test
     'epoch':2,
-    'batch_iter':4,
-    'lr':0.00001,
+    'batch_iter':3,
+    'lr':0.0001,
     'img_size':96,
-    'batch_size':10,
-    'train_dir':'train_dir/eval4/',
+    'batch_size':1,
+    'train_dir':'train_dir/train_pnn_new_30_30epo/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/eval4/',
+    'test_dir':'test_results/test_pnn_new_30_30epo/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
+    'regol':True,
+    'reg_weight':0.000001,
     'ratio':32,
     'gpu':True,
+    'tensorboard':True,
     'channel1':3, 
     'channel2':31,
     'padSize':16,
@@ -44,11 +50,24 @@ def train():
 
     I = tf.placeholder(tf.float32, shape=(None, img_size,img_size, ch1+ch2)) 
     I_g = tf.placeholder(tf.float32,shape=(None,img_size,img_size,ch2)) 
-    I_out = PNN(I)
+    I_out,reg = PNN(I)
     lr_ = param['lr']
     lr = tf.placeholder(tf.float32 ,shape = [])
-    loss = tf.reduce_mean(tf.abs(I_out-I_g))
+    loss1 = tf.reduce_mean(tf.abs(I_out-I_g))
+    if param['regol']:
+        loss2 = param['reg_weight']*reg
+    else:
+        loss2=0
+    loss = loss1 + loss2
     g_optim =  tf.train.AdamOptimizer(lr).minimize(loss)
+
+    if param['tensorboard']:
+        if param['regol']:
+            tf.summary.scalar('loss1',loss1)
+            tf.summary.scalar('loss2',loss2)
+        tf.summary.scalar('loss',loss)
+        merged = tf.summary.merge_all() 
+        writer = tf.summary.FileWriter('logs',graph=tf.get_default_graph()) 
 
     saver = tf.train.Saver(max_to_keep = 5)
     save_path = param['train_dir']+param['save_model_name']
@@ -89,12 +108,19 @@ def train():
                 I_ref = np.transpose(I_HS_HR,[0,2,3,1])
                 if param['residual']:
                     I_ref=I_ref-I_in[:,:,:,:param['channel2']]
-                _, lossvalue = sess.run([g_optim,loss],{I:I_in,I_g:I_ref,lr:lr_})
-                print("loss: {0}".format(lossvalue))
+                if param['regol']:
+                    _, lossvalue,lossvalue1,lossvalue2 = sess.run([g_optim,loss,loss1,loss2],{I:I_in,I_g:I_ref,lr:lr_})
+                    print("loss: {0}, loss1: {1}, loss2: {2}".format(lossvalue,lossvalue1,lossvalue2))
+                else:
+                    _, lossvalue,lossvalue1 = sess.run([g_optim,loss,loss1],{I:I_in,I_g:I_ref,lr:lr_})
+                    print("loss: {0}, loss1: {1}".format(lossvalue,lossvalue1))
+
+                if param['tensorboard'] and num%100==99:
+                    result = sess.run(merged,feed_dict={I:I_in,I_g:I_ref,lr:lr_})
+                    writer.add_summary(result,num//100 + FLAGS.BatchIter*j//100) #将日志数据写入文件
             saver.save(sess, save_path, global_step = j+1)
             ckpt = tf.train.latest_checkpoint(param['train_dir'])
             saver.restore(sess, ckpt)
-
 
 def testAll():
     if not os.path.exists(param['test_dir']):
@@ -106,7 +132,6 @@ def testAll():
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
     saver = tf.train.Saver(max_to_keep = 5)
-
 
     with tf.Session(config=config) as sess:
         ckpt = tf.train.latest_checkpoint(param['train_dir'])
@@ -120,6 +145,7 @@ def testAll():
             I_in = np.transpose(I_in,[0,2,3,1])
             if param['residual']:
                 I_res = I_in[:,:,:,:param['channel2']]
+            
             I_pred = sess.run([I_out],{I:I_in})
             if param['residual']:
                 I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
