@@ -10,4 +10,4 @@ THEANO_FLAGS=device=cuda0 python3 PNN_main.py
 
 There is a deeper ResNet implemention in model_new.py.
 
-若使用我们的生成代码方法，在PNN_new2.py中（其实差别不大）。
+若使用我们的生成代码方法，run PNN_new2.py（其实差别不大）。
