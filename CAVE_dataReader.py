@@ -19,18 +19,17 @@ def all_train_data_in():
     allDataY = []
     List = sio.loadmat(datapath+'List')
     Ind  = List['Ind'] # a list of rand index with frist 20 to be train data and last 12 to be test data
-    for root, dirs, files in os.walk(datapath+'X/'):
-           for j in range(20):
-#                print(Ind[0,j])
-                i = Ind[0,j]-1
-                data = sio.loadmat(datapath+'X/'+files[i])
-                inX  = data['msi']
-#                print(type(inX[1,1,1]))
-                allDataX.append(inX)
-                data = sio.loadmat(datapath+'Y/'+files[i])
-                inY  = data['RGB']
-                allDataY.append(inY)
-                
+    files = os.listdir(datapath+'X/')
+    files.sort()
+    for j in range(20):
+        i = Ind[0,j]-1
+        data = sio.loadmat(datapath+'X/'+files[i])
+        inX  = data['msi']
+        allDataX.append(inX)
+        data = sio.loadmat(datapath+'Y/'+files[i])
+        inY  = data['RGB']
+        allDataY.append(inY)
+
     return allDataX, allDataY
 
 
@@ -39,17 +38,18 @@ def all_test_data_in():
     allDataY = []
     List = sio.loadmat(datapath+'List')
     Ind  = List['Ind'] # a list of rand index with frist 20 to be train data and last 12 to be test data
-    for root, dirs, files in os.walk(datapath+'X/'):
-           for j in range(12):
+    files = os.listdir(datapath+'X/')
+    files.sort()
+    for j in range(12):
 #                print(Ind[0,j])
-                i = Ind[0,j+20]-1
+        i = Ind[0,j+20]-1
 #                print(i)
-                data = sio.loadmat(datapath+'X/'+files[i])
-                inX  = data['msi']
-                allDataX.append(inX)
-                data = sio.loadmat(datapath+'Y/'+files[i])
-                inY  = data['RGB']
-                allDataY.append(inY)
+        data = sio.loadmat(datapath+'X/'+files[i])
+        inX  = data['msi']
+        allDataX.append(inX)
+        data = sio.loadmat(datapath+'Y/'+files[i])
+        inY  = data['RGB']
+        allDataY.append(inY)
     return allDataX, allDataY
 
 def train_data_in(allX, allY, sizeI, batch_size, channel=31,dataNum = 20,ratio=32):
@@ -128,5 +128,20 @@ def generate_test_data(ratio,test_data_name):
     I_HS_HR = np.expand_dims(I_HS_HR, axis = 0)
     I_HS_HR = np.transpose(I_HS_HR,(0,3,1,2))
     I_HS = down_img(I_HS_HR, ratio)
+
+    return I_HS,I_MS
+
+def generate_test_data2(ratio,test_data_name):
+    data = sio.loadmat(datapath+'Y/'+test_data_name)
+    I_MS = data['RGB']
+    # data = sio.loadmat(datapath+'X/'+test_data_name)
+    # I_HS_HR = data['msi']
+    data = sio.loadmat(datapath+'Z/'+test_data_name)
+    I_HS  = data['Zmsi']
+
+    I_MS = np.expand_dims(I_MS, axis = 0)
+    I_MS = np.transpose(I_MS,(0,3,1,2))
+    I_HS = np.expand_dims(I_HS, axis = 0)
+    I_HS = np.transpose(I_HS,(0,3,1,2))
 
     return I_HS,I_MS
