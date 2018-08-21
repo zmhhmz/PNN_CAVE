@@ -7,10 +7,6 @@ import CAVE_dataReader as Crd
 import scipy.io as sio
 from model_new import PNN
 
-#to dos:
-# target adaptive
-
-
 param={
     'mode':'test', # train or test
     'epoch':20,
@@ -32,6 +28,7 @@ param={
     'channel1':3, 
     'channel2':31,
     'padSize':16,
+    'NumResNet':30,
     'Target_adaptive':False
 }
 

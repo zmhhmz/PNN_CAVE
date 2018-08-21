@@ -7,7 +7,6 @@ import CAVE_dataReader as Crd
 import scipy.io as sio
 from model_new import PNN
 
-
 param={
     'mode':'test', # train or test
     'epoch':10,
@@ -15,13 +14,13 @@ param={
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/train_pnnnew_52_10_res_reg/',
+    'train_dir':'train_dir/train_pnnnew_52_10_res_noreg/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_pnnnew_52_10_res_reg/',
+    'test_dir':'test_results/test_pnnnew_52_10_res_noreg/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
-    'regol':True,
+    'regol':False,
     'reg_weight':0.0000002,
     'ratio':32,
     'gpu':True,
@@ -29,6 +28,7 @@ param={
     'channel1':3, 
     'channel2':31,
     'padSize':16,
+    'NumResNet':30,
     'Target_adaptive':False
 }
 

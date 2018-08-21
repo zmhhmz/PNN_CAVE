@@ -9,19 +9,19 @@ from model_new import PNN
 
 
 param={
-    'mode':'test', # train or test
+    'mode':'train', # train or test
     'epoch':2,
     'batch_iter':3,
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/eval_chi/',
+    'train_dir':'train_dir/eval_chi1/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/eval_chi/',
+    'test_dir':'test_results/eval_chi1/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
-    'regol':True,
+    'regol':False,
     'reg_weight':0.0000002,
     'ratio':32,
     'gpu':True,
@@ -29,16 +29,10 @@ param={
     'channel1':3, 
     'channel2':30,
     'padSize':16,
-    # 'PNN':'test',  #new or test
+    'NumResNet':30,
     'Target_adaptive':False
 }
 
-# if param['PNN']=='old':
-#     from model_new import PNN
-# elif param['PNN']=='new':
-#     from model_new import PNN2 as PNN
-# else:
-#     from model_new import PNN3 as PNN
 
 def train():
     if not os.path.exists(param['train_dir']):
