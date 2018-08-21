@@ -5,39 +5,33 @@ import random
 from utils import interp23, down_img, input_prep
 import CAVE_dataReader as Crd
 import scipy.io as sio
-
-#to dos:
-# target adaptive
+from model_new import PNN
 
 
 param={
-    'mode':'train', # train or test
-    'epoch':15,
+    'mode':'test', # train or test
+    'epoch':10,
     'batch_iter':2000,
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/train_pnn_new_30_15epo_nores/',
+    'train_dir':'train_dir/train_pnnnew_52_10_res_reg/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_pnn_new_30_15epo_nores/',
+    'test_dir':'test_results/test_pnnnew_52_10_res_reg/',
     'save_model_name':'PNN_model',
     'cost':'L1',
-    'residual':False,
-    'regol':False,
-    'reg_weight':0.000001,
+    'residual':True,
+    'regol':True,
+    'reg_weight':0.0000002,
     'ratio':32,
     'gpu':True,
     'tensorboard':True,
     'channel1':3, 
     'channel2':31,
     'padSize':16,
-    'PNN':'new',  #old or new
     'Target_adaptive':False
 }
-if param['PNN']=='old':
-    from model_new import PNN
-else:
-    from model_new import PNN2 as PNN
+
 
 def train():
     if not os.path.exists(param['train_dir']):
@@ -50,7 +44,7 @@ def train():
 
     I = tf.placeholder(tf.float32, shape=(None, img_size,img_size, ch1+ch2)) 
     I_g = tf.placeholder(tf.float32,shape=(None,img_size,img_size,ch2)) 
-    I_out,reg = PNN(I)
+    I_out,reg = PNN(I,param)
     lr_ = param['lr']
     lr = tf.placeholder(tf.float32 ,shape = [])
     loss1 = tf.reduce_mean(tf.abs(I_out-I_g))
@@ -112,22 +106,22 @@ def train():
                     _, lossvalue,lossvalue1,lossvalue2 = sess.run([g_optim,loss,loss1,loss2],{I:I_in,I_g:I_ref,lr:lr_})
                     print("loss: {0}, loss1: {1}, loss2: {2}".format(lossvalue,lossvalue1,lossvalue2))
                 else:
-                    _, lossvalue,lossvalue1 = sess.run([g_optim,loss,loss1],{I:I_in,I_g:I_ref,lr:lr_})
-                    print("loss: {0}, loss1: {1}".format(lossvalue,lossvalue1))
+                    _, lossvalue = sess.run([g_optim,loss],{I:I_in,I_g:I_ref,lr:lr_})
+                    print("loss: {0}".format(lossvalue))
 
                 if param['tensorboard'] and num%100==99:
                     result = sess.run(merged,feed_dict={I:I_in,I_g:I_ref,lr:lr_})
-                    writer.add_summary(result,num//100 + FLAGS.BatchIter*j//100) #将日志数据写入文件
+                    writer.add_summary(result,num//100 + param['batch_iter']*j//100) #将日志数据写入文件
             saver.save(sess, save_path, global_step = j+1)
             ckpt = tf.train.latest_checkpoint(param['train_dir'])
             saver.restore(sess, ckpt)
 
 def testAll():
     if not os.path.exists(param['test_dir']):
-        os.makedirs(param['test_dir'])    
+        os.makedirs(param['test_dir'])
 
-    I = tf.placeholder(tf.float32, shape=(None, 512,512, 34)) 
-    I_out,_ = PNN(I)
+    I = tf.placeholder(tf.float32, shape=(None, 512,512, 34))
+    I_out,_ = PNN(I,param)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
@@ -135,20 +129,19 @@ def testAll():
 
     with tf.Session(config=config) as sess:
         ckpt = tf.train.latest_checkpoint(param['train_dir'])
-        saver.restore(sess, ckpt) 
+        saver.restore(sess, ckpt)
         
         files =os.listdir('CAVEdata/X/')
         files.sort()
         for i in range(32):
             I_HS,I_MS = Crd.generate_test_data(param['ratio'],files[i])
             I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
-            I_in = np.transpose(I_in,[0,2,3,1])
-            if param['residual']:
-                I_res = I_in[:,:,:,:param['channel2']]
-            
+            I_in = np.transpose(I_in,[0,2,3,1])                
+                           
             I_pred = sess.run([I_out],{I:I_in})
         
             if param['residual']:
+                I_res = I_in[:,:,:,:param['channel2']]
                 I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
             else:
                 I_pred = np.squeeze(I_pred)
@@ -168,3 +161,4 @@ if __name__ == '__main__':
             train()
         else:
             testAll()
+

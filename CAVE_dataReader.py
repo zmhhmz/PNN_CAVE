@@ -10,7 +10,7 @@ import numpy as np
 import scipy.io as sio  
 from utils import down_img
 import random 
-#import cv2
+
 
 datapath = 'CAVEdata/'
 
@@ -134,8 +134,6 @@ def generate_test_data(ratio,test_data_name):
 def generate_test_data2(ratio,test_data_name):
     data = sio.loadmat(datapath+'Y/'+test_data_name)
     I_MS = data['RGB']
-    # data = sio.loadmat(datapath+'X/'+test_data_name)
-    # I_HS_HR = data['msi']
     data = sio.loadmat(datapath+'Z/'+test_data_name)
     I_HS  = data['Zmsi']
 

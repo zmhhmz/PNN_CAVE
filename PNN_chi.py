@@ -3,38 +3,42 @@ import tensorflow as tf
 import os
 import random
 from utils import interp23, down_img, input_prep
-import CAVE_dataReader as Crd
+import ChikuseiReader as Crd
 import scipy.io as sio
 from model_new import PNN
-
-#to dos:
-# target adaptive
 
 
 param={
     'mode':'test', # train or test
-    'epoch':20,
-    'batch_iter':2000,
+    'epoch':2,
+    'batch_iter':3,
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/train_pnnnew3_20epo_res/',
+    'train_dir':'train_dir/eval_chi/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_pnnnew3_20epo_res/',
+    'test_dir':'test_results/eval_chi/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
-    'regol':False,
-    'reg_weight':0.000001,
+    'regol':True,
+    'reg_weight':0.0000002,
     'ratio':32,
     'gpu':True,
     'tensorboard':True,
     'channel1':3, 
-    'channel2':31,
+    'channel2':30,
     'padSize':16,
+    # 'PNN':'test',  #new or test
     'Target_adaptive':False
 }
 
+# if param['PNN']=='old':
+#     from model_new import PNN
+# elif param['PNN']=='new':
+#     from model_new import PNN2 as PNN
+# else:
+#     from model_new import PNN3 as PNN
 
 def train():
     if not os.path.exists(param['train_dir']):
@@ -47,7 +51,7 @@ def train():
 
     I = tf.placeholder(tf.float32, shape=(None, img_size,img_size, ch1+ch2)) 
     I_g = tf.placeholder(tf.float32,shape=(None,img_size,img_size,ch2)) 
-    I_out,reg = PNN(I)
+    I_out,reg = PNN(I,param)
     lr_ = param['lr']
     lr = tf.placeholder(tf.float32 ,shape = [])
     loss1 = tf.reduce_mean(tf.abs(I_out-I_g))
@@ -123,8 +127,8 @@ def testAll():
     if not os.path.exists(param['test_dir']):
         os.makedirs(param['test_dir'])
 
-    I = tf.placeholder(tf.float32, shape=(None, 512,512, 34))
-    I_out,_ = PNN(I)
+    I = tf.placeholder(tf.float32, shape=(None, 448,544, param['channel1']+param['channel2']))
+    I_out,_ = PNN(I,param)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
@@ -132,25 +136,23 @@ def testAll():
 
     with tf.Session(config=config) as sess:
         ckpt = tf.train.latest_checkpoint(param['train_dir'])
-        saver.restore(sess, ckpt) 
+        saver.restore(sess, ckpt)
         
-        files =os.listdir('CAVEdata/X/')
+        files =os.listdir('ChikuseiData/test/')
         files.sort()
-        for i in range(32):
-            I_HS,I_MS = Crd.generate_test_data2(param['ratio'],files[i])
+        for file in [i for i in files if i[0]!='.']:
+            I_HS,I_MS = Crd.generate_test_data(file)
             I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
             I_in = np.transpose(I_in,[0,2,3,1])
-            
             I_pred = sess.run([I_out],{I:I_in})
-        
             if param['residual']:
                 I_res = I_in[:,:,:,:param['channel2']]
                 I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
             else:
                 I_pred = np.squeeze(I_pred)
 
-            sio.savemat(param['test_dir']+files[i], {'outX': I_pred})     
-            print(files[i] + ' done!')
+            sio.savemat(param['test_dir']+file, {'outX': I_pred})     
+            print(file + ' done!')
 
 
 
