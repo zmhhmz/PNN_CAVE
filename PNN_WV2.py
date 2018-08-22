@@ -3,31 +3,30 @@ import tensorflow as tf
 import os
 import random
 from utils import interp23, down_img, input_prep
-import ChikuseiReader as Crd
+import WV2Reader as Crd
 import scipy.io as sio
 from model_new import PNN
 
-
 param={
     'mode':'test', # train or test
-    'epoch':15,
-    'batch_iter':2000,
+    'epoch':2,
+    'batch_iter':3,
     'lr':0.0001,
-    'img_size':96,
+    'img_size':36,
     'batch_size':10,
-    'train_dir':'train_dir/train_chi_30_12epo_res_noreg/',
+    'train_dir':'train_dir/eval_WV2/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_chi_30_12epo_res_noreg/',
+    'test_dir':'test_results/eval_WV2/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
     'regol':False,
-    'reg_weight':0.0000002,
-    'ratio':32,
+    'reg_weight':0.000001,
+    'ratio':4,
     'gpu':True,
     'tensorboard':True,
     'channel1':3, 
-    'channel2':30,
+    'channel2':8,
     'padSize':16,
     'NumResNet':30,
     'Target_adaptive':False
@@ -121,35 +120,34 @@ def testAll():
     if not os.path.exists(param['test_dir']):
         os.makedirs(param['test_dir'])
 
-    I = tf.placeholder(tf.float32, shape=(None, 448,544, param['channel1']+param['channel2']))
+    I = tf.placeholder(tf.float32, shape=(None, 1676, 2632, 11))
     I_out,_ = PNN(I,param)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
     saver = tf.train.Saver(max_to_keep = 5)
-    data = sio.loadmat('ChikuseiData/V')
-    V    = np.float32(data['V'])  
 
     with tf.Session(config=config) as sess:
         ckpt = tf.train.latest_checkpoint(param['train_dir'])
-        saver.restore(sess, ckpt)
-        
-        files =os.listdir('ChikuseiData/test/')
-        files.sort()
-        for file in [i for i in files if i[0]!='.']:
-            I_HS,I_MS = Crd.generate_test_data(file)
-            I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
-            I_in = np.transpose(I_in,[0,2,3,1])
-            I_pred = sess.run([I_out],{I:I_in})
-            if param['residual']:
-                I_res = I_in[:,:,:,:param['channel2']]
-                I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
-            else:
-                I_pred = np.squeeze(I_pred)
-            I_pred = np.tensordot(I_pred, V.transpose(), ([2],[0]))
+        saver.restore(sess, ckpt) 
+        data = sio.loadmat("WV2Data/testYZ.mat")
+        I_MS = data['Y']
+        I_HS = data['Z']
+        I_MS = np.expand_dims(I_MS, axis = 0)
+        I_MS = np.transpose(I_MS,(0,3,1,2))
+        I_HS = np.expand_dims(I_HS, axis = 0)
+        I_HS = np.transpose(I_HS,(0,3,1,2))
+        I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
+        I_in = np.transpose(I_in,[0,2,3,1])
+        I_pred = sess.run([I_out],{I:I_in})
+        if param['residual']:
+            I_res = I_in[:,:,:,:param['channel2']]
+            I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
+        else:
+            I_pred = np.squeeze(I_pred)
+        sio.savemat(param['test_dir']+'WV2_result.mat', {'outX': I_pred}) 
+        print("Done.")
 
-            sio.savemat(param['test_dir']+file, {'outX': I_pred})     
-            print(file + ' done!')
 
 
 if __name__ == '__main__':
