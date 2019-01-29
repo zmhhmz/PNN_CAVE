@@ -6,4 +6,8 @@ Chikusei dataset: PNN_chi.py
 
 WV2 dataset: PNN_WV2.py (pre-trained weights provided in train_dir)
 
-We generate training data using our own method. To do: target adaptive.
+We generate training data using our own method. 
+
+Please put the above three data set in their corresponding folders.
+
+To do: target adaptive.
