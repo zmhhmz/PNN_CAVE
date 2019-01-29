@@ -6,16 +6,17 @@ from utils import interp23, down_img, input_prep
 import WV2Reader as Crd
 import scipy.io as sio
 from model_new import PNN
+import re
 
 param={
-    'mode':'test', # train or test
+    'mode':'train', # train or test
     'epoch':2,
     'batch_iter':3,
     'lr':0.0001,
     'img_size':36,
     'batch_size':10,
     'train_dir':'train_dir/eval_WV2/',
-    'data_dir':'CAVEdata/',
+    'data_dir':'CAVEdata/', ##
     'test_dir':'test_results/eval_WV2/',
     'save_model_name':'PNN_model',
     'cost':'L1',
@@ -66,7 +67,6 @@ def train():
     saver = tf.train.Saver(max_to_keep = 5)
     save_path = param['train_dir']+param['save_model_name']
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)    
-    epoch = param['epoch']
 
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())

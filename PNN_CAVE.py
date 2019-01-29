@@ -3,32 +3,31 @@ import tensorflow as tf
 import os
 import random
 from utils import interp23, down_img, input_prep
-import ChikuseiReader as Crd
+import CAVE_dataReader as Crd
 import scipy.io as sio
 from model_new import PNN
-import re
-
+import re 
 
 param={
     'mode':'train', # train or test
-    'epoch':15,
+    'epoch':20,
     'batch_iter':2000,
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/train_chi_30_12epo_res_noreg/',
+    'train_dir':'train_dir/train_pnnnew3_20epo_res/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_chi_30_12epo_res_noreg/',
+    'test_dir':'test_results/test_pnnnew3_20epo_res/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
     'regol':False,
-    'reg_weight':0.0000002,
+    'reg_weight':0.000001,
     'ratio':32,
     'gpu':True,
     'tensorboard':True,
     'channel1':3, 
-    'channel2':30,
+    'channel2':31,
     'padSize':16,
     'NumResNet':30,
     'Target_adaptive':False
@@ -68,6 +67,7 @@ def train():
     saver = tf.train.Saver(max_to_keep = 5)
     save_path = param['train_dir']+param['save_model_name']
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)    
+    epoch = param['epoch']
 
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
@@ -86,7 +86,7 @@ def train():
             print("re-training")
             start_point = 0
         allX, allY = Crd.all_train_data_in()
-        for j in range(start_point,param['epoch']):  #start point
+        for j in range(start_point,epoch):  #start point
             if j+1 >(param['epoch']/3):
                 lr_ = param['lr']*0.1
             if j+1 >(2*param['epoch']/3):
@@ -121,35 +121,35 @@ def testAll():
     if not os.path.exists(param['test_dir']):
         os.makedirs(param['test_dir'])
 
-    I = tf.placeholder(tf.float32, shape=(None, 448,544, param['channel1']+param['channel2']))
-    I_out,_ = PNN(I,param)
+    I = tf.placeholder(tf.float32, shape=(None, 512,512, 34))
+    I_out,_ = PNN(I)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
     saver = tf.train.Saver(max_to_keep = 5)
-    data = sio.loadmat('ChikuseiData/V')
-    V    = np.float32(data['V'])  
 
     with tf.Session(config=config) as sess:
         ckpt = tf.train.latest_checkpoint(param['train_dir'])
-        saver.restore(sess, ckpt)
+        saver.restore(sess, ckpt) 
         
-        files =os.listdir('ChikuseiData/test/')
+        files =os.listdir('CAVEdata/X/')
         files.sort()
-        for file in [i for i in files if i[0]!='.']:
-            I_HS,I_MS = Crd.generate_test_data(file)
+        for i in range(32):
+            I_HS,I_MS = Crd.generate_test_data2(param['ratio'],files[i])
             I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
             I_in = np.transpose(I_in,[0,2,3,1])
+            
             I_pred = sess.run([I_out],{I:I_in})
+        
             if param['residual']:
                 I_res = I_in[:,:,:,:param['channel2']]
                 I_pred = np.squeeze(I_pred) + np.squeeze(I_res)
             else:
                 I_pred = np.squeeze(I_pred)
-            I_pred = np.tensordot(I_pred, V.transpose(), ([2],[0]))
 
-            sio.savemat(param['test_dir']+file, {'outX': I_pred})     
-            print(file + ' done!')
+            sio.savemat(param['test_dir']+files[i], {'outX': I_pred})     
+            print(files[i] + ' done!')
+
 
 
 if __name__ == '__main__':
