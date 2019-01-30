@@ -10,4 +10,4 @@ We generate training data using our own method.
 
 Please put the above three datasets in their corresponding folders.
 
-To do: target adaptive.
+Note: target adaptive is not implementable for our datasets.
