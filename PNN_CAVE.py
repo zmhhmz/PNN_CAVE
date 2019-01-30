@@ -122,22 +122,25 @@ def testAll():
         os.makedirs(param['test_dir'])
 
     I = tf.placeholder(tf.float32, shape=(None, 512,512, 34))
-    I_out,_ = PNN(I)
+    I_out,_ = PNN(I,param)
 
     config = tf.ConfigProto(allow_soft_placement=True,log_device_placement=True)
     config.gpu_options.allow_growth = True
     saver = tf.train.Saver(max_to_keep = 5)
 
     with tf.Session(config=config) as sess:
-        ckpt = tf.train.latest_checkpoint(param['train_dir'])
-        saver.restore(sess, ckpt) 
         
         files =os.listdir('CAVEdata/X/')
         files.sort()
         for i in range(32):
+            ckpt = tf.train.latest_checkpoint(param['train_dir'])
+            saver.restore(sess, ckpt) 
             I_HS,I_MS = Crd.generate_test_data2(param['ratio'],files[i])
             I_in = input_prep(I_HS, I_MS, ratio = param['ratio'])
             I_in = np.transpose(I_in,[0,2,3,1])
+            
+   
+            
             
             I_pred = sess.run([I_out],{I:I_in})
         
@@ -149,7 +152,7 @@ def testAll():
 
             sio.savemat(param['test_dir']+files[i], {'outX': I_pred})     
             print(files[i] + ' done!')
-
+            
 
 
 if __name__ == '__main__':

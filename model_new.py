@@ -2,25 +2,13 @@ import tensorflow as tf
 
 def PNN(I_in,param):
     I_in,reg1 = resCNNnet('ResBlock',I_in,1,param['channel1']+param['channel2'],param['NumResNet'],param['regol'])
-    filters=[param['channel1']+param['channel2'],param['channel2']]
-    last =False
     reg2=0
-    for i in range(len(filters)-1):
-        if i==len(filters)-2:
-            last=True
-        w = create_kernel('w{0}'.format(i+1), [5, 5, filters[i], filters[i+1]])
-        if param['regol']:
-            reg2i = tf.reduce_sum(w**2)
-            reg2=reg2+reg2i
-        b = tf.get_variable(name='b{0}'.format(i+1),shape=[filters[i+1]],dtype=tf.float32,initializer=tf.constant_initializer(0.0),trainable=True)
-        scale = tf.get_variable(name='scale{0}'.format(i+1),shape=[filters[i+1]],dtype=tf.float32,initializer=tf.constant_initializer(1.0/20),trainable=True)
-        beta = tf.get_variable(name='beta{0}'.format(i+1),shape=[filters[i+1]],dtype=tf.float32,initializer=tf.constant_initializer(0.0),trainable=True)
-        conv = tf.nn.conv2d(I_in, w, [1, 1, 1, 1], padding='SAME')
-        feature = tf.nn.bias_add(conv, b)
-        mean, var  = tf.nn.moments(feature,[0, 1, 2])
-        I_in = tf.nn.batch_normalization(feature, mean, var, beta, scale, 1e-5)
-        if not last:
-            I_in = tf.nn.relu(I_in)
+
+    w = create_kernel('wn', [5, 5, param['channel1']+param['channel2'], param['channel2']])
+    if param['regol']:
+        reg2i = tf.reduce_sum(w**2)
+        reg2=reg2+reg2i
+    I_in = tf.nn.conv2d(I_in, w, [1, 1, 1, 1], padding='SAME')
     reg = reg1+reg2
     return I_in,reg
 
