@@ -10,15 +10,15 @@ import re
 
 
 param={
-    'mode':'train', # train or test
-    'epoch':15,
+    'mode':'test', # train or test
+    'epoch':20,
     'batch_iter':2000,
     'lr':0.0001,
     'img_size':96,
     'batch_size':10,
-    'train_dir':'train_dir/train_chi_30_12epo_res_noreg/',
+    'train_dir':'train_dir/train_chi_20epo/',
     'data_dir':'CAVEdata/',
-    'test_dir':'test_results/test_chi_30_12epo_res_noreg/',
+    'test_dir':'test_results/test_chi_20epo/',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
@@ -26,7 +26,7 @@ param={
     'reg_weight':0.0000002,
     'ratio':32,
     'gpu':True,
-    'tensorboard':True,
+    'tensorboard':False,
     'channel1':3, 
     'channel2':30,
     'padSize':16,
