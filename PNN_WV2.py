@@ -9,15 +9,15 @@ from model_new import PNN
 import re
 
 param={
-    'mode':'train', # train or test
-    'epoch':2,
-    'batch_iter':3,
+    'mode':'test', # train or test
+    'epoch':20,
+    'batch_iter':2000,
     'lr':0.0001,
     'img_size':36,
     'batch_size':10,
-    'train_dir':'train_dir/eval_WV2/',
+    'train_dir':'train_dir/train_WV2_60epo/',
     'data_dir':'CAVEdata/', ##
-    'test_dir':'test_results/eval_WV2/',
+    'test_dir':'test_results/test_WV2_60epo//',
     'save_model_name':'PNN_model',
     'cost':'L1',
     'residual':True,
@@ -25,7 +25,7 @@ param={
     'reg_weight':0.000001,
     'ratio':4,
     'gpu':True,
-    'tensorboard':True,
+    'tensorboard':False,
     'channel1':3, 
     'channel2':8,
     'padSize':16,
